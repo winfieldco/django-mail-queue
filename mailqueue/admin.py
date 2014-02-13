@@ -10,10 +10,11 @@ class AttachmentInline(admin.TabularInline):
 
 
 class MailerAdmin(admin.ModelAdmin):
-    list_display = ('app', 'subject', 'to_address', 'sent', 'last_attempt')
-    search_fields = ['to_address', 'subject', 'app', 'bcc_address']
+    list_display = ('app', 'id', 'subject', 'to_address', 'sent', 'last_attempt')
+    search_fields = ['id', 'to_address', 'subject', 'app', 'bcc_address']
     actions = ['send_failed']
     inlines = [AttachmentInline]
+    list_filter = ['sent']
 
     def send_failed(self, request, queryset):
         emails = queryset.filter(sent=False)

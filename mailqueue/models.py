@@ -18,6 +18,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
+import celery
 
 from . import defaults
 from .utils import get_storage
@@ -39,7 +40,7 @@ class MailerMessageManager(models.Manager):
         if type(offset) is int:
             offset = datetime.timedelta(hours=offset)
 
-        delete_before = datetime.datetime.utcnow().replace(tzinfo=utc) - offset
+        delete_before = datetime.datetime.utcnow() - offset
         self.filter(sent=True, last_attempt__lte=delete_before).delete()
 
 
@@ -121,7 +122,7 @@ class MailerMessage(models.Model):
                 self.sent = True
             except Exception as e:
                 self.do_not_send = True
-                logger.error('Mail Queue Exception: {0}'.format(e))
+                raise Exception('Mail Queue Exception: {0}'.format(e))
             self.save()
 
 
