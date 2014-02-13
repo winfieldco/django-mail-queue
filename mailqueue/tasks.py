@@ -8,7 +8,10 @@ def send_mail(pk):
       message = MailerMessage.objects.get(pk=pk)
       message._send()
     except Exception as e:
-      logging.error('Unable to send email to:%s from:%s subject:%s id:%d exception:%s', message.to_address, message.from_address, message.subject, message.id, e)
+      if message:
+        logging.error('Unable to send email via mail queue task, to:%s from:%s subject:%s id:%d exception:%s', message.to_address, message.from_address, message.subject, message.id, e)
+      else:
+        logging.error('Unable to send email via mail queue task %s', e)
 
 @task()
 def clear_sent_messages():
