@@ -23,7 +23,6 @@ import celery
 from . import defaults
 from .utils import get_storage
 
-
 class MailerMessageManager(models.Manager):
     def send_queued(self, limit=None):
         if limit is None:
@@ -65,6 +64,13 @@ class MailerMessage(models.Model):
     def __str__(self):
         return self.subject
 
+    def add_header(self, name, value):
+
+        if self.pk is None:
+            self._save_without_sending()
+
+        Header.objects.create(email=self, name=name, value=value)
+
     def add_attachment(self, attachment):
         """
         Takes a Django `File` object and creates an attachment for this mailer message.
@@ -102,9 +108,13 @@ class MailerMessage(models.Model):
             else:
                 self.last_attempt = datetime.datetime.now()
 
+            headers = {}
+            for header in self.header_set.all():
+                headers[header.name] = header.value
+
             subject, from_email, to = self.subject, self.from_address, self.to_address
             text_content = self.content
-            msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [to], headers=headers)
             if self.html_content:
                 html_content = self.html_content
                 msg.attach_alternative(html_content, "text/html")
@@ -125,6 +135,14 @@ class MailerMessage(models.Model):
                 raise Exception('Mail Queue Exception: {0}'.format(e))
             self.save()
 
+@python_2_unicode_compatible
+class Header(models.Model):
+    name = models.CharField(_('Name'), max_length=250)
+    value = models.CharField(_('Value'), max_length=250)
+    email = models.ForeignKey(MailerMessage, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
 @python_2_unicode_compatible
 class Attachment(models.Model):
