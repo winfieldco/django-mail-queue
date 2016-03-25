@@ -7,6 +7,8 @@
 #---------------------------------------------#
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+from parts.core.conf import konstants as conf_konstants
 import datetime
 import logging
 import os
@@ -100,9 +102,9 @@ class MailerMessage(models.Model):
 
             subject, from_email = self.subject, self.from_address
             text_content = self.content
-            
+
             msg = EmailMultiAlternatives(subject, text_content, from_email)
-            
+
             if self.reply_to:
                 msg.extra_headers.update({"reply-to": self.reply_to})
 
@@ -113,8 +115,26 @@ class MailerMessage(models.Model):
             msg.to = [email.strip() for email in self.to_address.split(',') if email.strip()]
             msg.bcc = [email.strip() for email in self.bcc_address.split(',') if email.strip()]
 
-            import logging
-            logging.error('SENDING' + msg.to)
+            # Emails are disabled during development mode for safety.
+            # However, if DEVELOPMENT_TO_EMAIL is set, emails will
+            # still be sent with an alias appended for the original to email.
+            if settings.SERVER_MODE == conf_konstants.ServerMode.DEVELOPMENT:
+              if settings.DEVELOPMENT_TO_EMAIL:
+
+                development_to_email_split = settings.DEVELOPMENT_TO_EMAIL.split('@')
+
+                to_emails = []
+                for to_email in msg.to:
+
+                  alias = to_email.replace('@', '_at_').replace('.', '_dot_').replace('+', '_plus_')
+                  to_emails.append('%s+%s@%s' % (development_to_email_split[0], alias, development_to_email_split[1]))
+
+                logging.error(to_emails)
+                msg.to = to_emails
+
+              else:
+                # Email sending disabled for development
+                return
 
             # Add any additional attachments
             for attachment in self.attachment_set.all():
