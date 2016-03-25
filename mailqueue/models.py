@@ -113,6 +113,9 @@ class MailerMessage(models.Model):
             msg.to = [email.strip() for email in self.to_address.split(',') if email.strip()]
             msg.bcc = [email.strip() for email in self.bcc_address.split(',') if email.strip()]
 
+            import logging
+            logging.error('SENDING' + msg.to)
+
             # Add any additional attachments
             for attachment in self.attachment_set.all():
                 msg.attach_file(os.path.join(settings.MEDIA_ROOT, attachment.file_attachment.name))
