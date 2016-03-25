@@ -3,3 +3,6 @@ dist/
 django_mail_queue.egg-info/
 .idea
 *.iml
+/build
+.vagrant
+Vagrantfile

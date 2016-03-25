@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-__author__ = 'derek'
 import os, sys
 from django.conf import settings
 import django
@@ -39,10 +38,18 @@ else:
                        USE_TZ=True)
 
 
-
-
-from django.test.simple import DjangoTestSuiteRunner
-test_runner = DjangoTestSuiteRunner(verbosity=1)
+try:
+    # Django 1.7 needs this, but other versions dont.
+    django.setup()
+except AttributeError:
+    pass
+try:
+    from django.test.simple import DjangoTestSuiteRunner
+    test_runner = DjangoTestSuiteRunner(verbosity=1)
+except ImportError:
+    from django.test.runner import DiscoverRunner
+    test_runner = DiscoverRunner(verbosity=1)
+    
 failures = test_runner.run_tests(['mailqueue', ])
 if failures:
     sys.exit(failures)
