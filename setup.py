@@ -5,7 +5,7 @@ import mailqueue
 version = mailqueue.VERSION
 
 setup(name='django-mail-queue',
-      version="2.2.2.1",
+      version="2.2.2.2",
       description="Simple Mail Queuing for Django",
       long_description=open("README.md", "r").read(),
       classifiers=[
