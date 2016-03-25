@@ -120,18 +120,12 @@ class MailerMessage(models.Model):
             # still be sent with an alias appended for the original to email.
             if settings.SERVER_MODE == conf_konstants.ServerMode.DEVELOPMENT:
               if settings.DEVELOPMENT_TO_EMAIL:
-
                 development_to_email_split = settings.DEVELOPMENT_TO_EMAIL.split('@')
-
                 to_emails = []
                 for to_email in msg.to:
-
                   alias = to_email.replace('@', '_at_').replace('.', '_dot_').replace('+', '_plus_')
                   to_emails.append('%s+%s@%s' % (development_to_email_split[0], alias, development_to_email_split[1]))
-
-                logging.error(to_emails)
                 msg.to = to_emails
-
               else:
                 # Email sending disabled for development
                 return
