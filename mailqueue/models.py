@@ -115,20 +115,25 @@ class MailerMessage(models.Model):
             msg.to = [email.strip() for email in self.to_address.split(',') if email.strip()]
             msg.bcc = [email.strip() for email in self.bcc_address.split(',') if email.strip()]
 
-            # Emails are disabled during development mode for safety.
-            # However, if DEVELOPMENT_TO_EMAIL is set, emails will
-            # still be sent with an alias appended for the original to email.
-            if settings.SERVER_MODE == conf_konstants.ServerMode.DEVELOPMENT:
-              if settings.DEVELOPMENT_TO_EMAIL:
-                development_to_email_split = settings.DEVELOPMENT_TO_EMAIL.split('@')
-                to_emails = []
-                for to_email in msg.to:
-                  alias = to_email.replace('@', '_at_').replace('.', '_dot_').replace('+', '_plus_')
-                  to_emails.append('%s+%s@%s' % (development_to_email_split[0], alias, development_to_email_split[1]))
-                msg.to = to_emails
-              else:
-                # Email sending disabled for development
-                return
+            # If EMAIL_TESTING_TO is set, all outgoing emails will be sent to that address
+            # with an alias appended for the original to email. In development mode
+            # emails are disabled for safety.
+            use_testing = False
+            if settings.EMAIL_TESTING_TO or settings.SERVER_MODE == conf_konstants.ServerMode.DEVELOPMENT:
+              use_testing = True
+
+            if use_testing:
+
+                if settings.EMAIL_TESTING_TO:
+                    email_testing_to_split = settings.EMAIL_TESTING_TO.split('@')
+                    to_emails = []
+                    for to_email in msg.to:
+                      alias = to_email.replace('@', '_at_').replace('.', '_dot_').replace('+', '_plus_')
+                      to_emails.append('%s+%s@%s' % (email_testing_to_split[0], alias, email_testing_to_split[1]))
+                    msg.to = to_emails
+                else:
+                    # Email sending disabled for development
+                    return
 
             # Add any additional attachments
             for attachment in self.attachment_set.all():
