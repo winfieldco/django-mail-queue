@@ -116,10 +116,10 @@ class MailerMessage(models.Model):
             msg.bcc = [email.strip() for email in self.bcc_address.split(',') if email.strip()]
 
             # If EMAIL_TESTING_TO is set, all outgoing emails will be sent to that address
-            # with an alias appended for the original to email. In development mode
+            # with an alias appended for the original to email. In non-production mode
             # emails are disabled for safety.
             use_testing = False
-            if settings.EMAIL_TESTING_TO or settings.SERVER_MODE == conf_konstants.ServerMode.DEVELOPMENT:
+            if settings.EMAIL_TESTING_TO or settings.SERVER_MODE != conf_konstants.ServerMode.PRODUCTION:
               use_testing = True
 
             if use_testing:
@@ -132,7 +132,7 @@ class MailerMessage(models.Model):
                       to_emails.append('%s+%s@%s' % (email_testing_to_split[0], alias, email_testing_to_split[1]))
                     msg.to = to_emails
                 else:
-                    # Email sending disabled for development
+                    # Email sending disabled for production
                     return
 
             # Add any additional attachments
