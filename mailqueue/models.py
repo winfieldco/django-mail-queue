@@ -132,7 +132,10 @@ class MailerMessage(models.Model):
                       to_emails.append('%s+%s@%s' % (email_testing_to_split[0], alias, email_testing_to_split[1]))
                     msg.to = to_emails
                 else:
-                    # Email sending disabled for production
+                    # Email sending disabled for non-production
+                    logging.debug('Email sending disabled for non-production and no EMAIL_TESTING_TO defined, message marked as sent but no email will be delivered: %s' % (self.id,))
+                    self.sent = True
+                    self.save()
                     return
 
             # Add any additional attachments
